@@ -1,0 +1,16 @@
+ - Proje kodlarını MVVM mimarisi yapısına uygun bir şekilde yaz. Gerekli klasörleri yarat ve gerekli klasörlerin yaratıldığından emin ol.
+ - Core ve Features yapısını kullan
+ - State management için provider kullanılacak
+ - Temiz bir kod yapısı olacak
+ - Tasarım modern ve kullanıcı dostu olmalı
+ - SQL ve API kullanma
+ - Firebase, Firestore kullanabilirsin
+ - İsteğimi olabildiğince az kod yazarak gerçekleştirmeye çalış
+ - İsteğimi tamamlayana kadar durma
+ - Yazılan kodların SOLID prensiplerine uygun oldundan min ol
+ - Kodun okunabilirliğini sağla
+ - Kodun anlaşılabilirliğini sağla, uygun isimlendirmeler ve yorumlar ekle
+ - Kodun geliştirilebilirliğini sağla
+ - Kodun kullanılabilirliğini sağla
+ - Kodun güvenliğini sağla
+ - Kodun performansını sağla
