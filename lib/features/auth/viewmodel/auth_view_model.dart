@@ -10,14 +10,17 @@ class AuthViewModel extends ChangeNotifier {
 
   bool get isLoading => _isLoading;
   String get errorMessage => _errorMessage;
+  User? get currentUser => _auth.currentUser;
 
   Future<bool> signInWithEmail(String email, String password) async {
     try {
       _isLoading = true;
-      notifyListeners();
-      await _auth.signInWithEmailAndPassword(email: email, password: password);
-      _isLoading = false;
       _errorMessage = '';
+      notifyListeners();
+
+      await _auth.signInWithEmailAndPassword(email: email, password: password);
+
+      _isLoading = false;
       notifyListeners();
       return true;
     } catch (e) {
@@ -31,11 +34,13 @@ class AuthViewModel extends ChangeNotifier {
   Future<bool> signUpWithEmail(String email, String password) async {
     try {
       _isLoading = true;
+      _errorMessage = '';
       notifyListeners();
+
       await _auth.createUserWithEmailAndPassword(
           email: email, password: password);
+
       _isLoading = false;
-      _errorMessage = '';
       notifyListeners();
       return true;
     } catch (e) {
@@ -49,38 +54,81 @@ class AuthViewModel extends ChangeNotifier {
   Future<bool> signInWithGoogle() async {
     try {
       _isLoading = true;
+      _errorMessage = '';
       notifyListeners();
+
+      // Önce mevcut oturumları temizle
+      await _auth.signOut();
+      await _googleSignIn.signOut();
+
+      // Google hesap seçiciyi göster
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+
       if (googleUser == null) {
         _isLoading = false;
-        _errorMessage = 'Google ile giriş iptal edildi';
+        _errorMessage = 'Google hesabı seçilmedi';
         notifyListeners();
         return false;
       }
 
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
+      try {
+        // Google kimlik doğrulama bilgilerini al
+        final GoogleSignInAuthentication googleAuth =
+            await googleUser.authentication;
 
-      await _auth.signInWithCredential(credential);
-      _isLoading = false;
-      _errorMessage = '';
-      notifyListeners();
-      return true;
+        // Firebase kimlik bilgilerini oluştur
+        final credential = GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken,
+          idToken: googleAuth.idToken,
+        );
+
+        // Firebase ile giriş yap
+        final userCredential = await _auth.signInWithCredential(credential);
+
+        if (userCredential.user == null) {
+          throw FirebaseAuthException(
+            code: 'null-user',
+            message: 'Kullanıcı bilgileri alınamadı',
+          );
+        }
+
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      } catch (authError) {
+        await _googleSignIn.signOut();
+        throw authError;
+      }
     } catch (e) {
       _isLoading = false;
-      _errorMessage =
-          'Google ile giriş yapılırken bir hata oluştu: ${e.toString()}';
+      if (e is FirebaseAuthException) {
+        _errorMessage = 'Giriş hatası: ${e.message}';
+      } else {
+        _errorMessage =
+            'Google ile giriş yapılırken bir hata oluştu: ${e.toString()}';
+      }
       notifyListeners();
       return false;
     }
   }
 
   Future<void> signOut() async {
-    await _auth.signOut();
-    await _googleSignIn.signOut();
+    try {
+      _isLoading = true;
+      _errorMessage = '';
+      notifyListeners();
+
+      await Future.wait([
+        _auth.signOut(),
+        _googleSignIn.signOut(),
+      ]);
+
+      _isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = 'Çıkış yapılırken bir hata oluştu: ${e.toString()}';
+      notifyListeners();
+    }
   }
 }

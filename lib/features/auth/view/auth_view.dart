@@ -27,7 +27,6 @@ class _AuthViewState extends State<AuthView> {
     return Scaffold(
       body: Stack(
         children: [
-          // Arkaplan resmi
           Container(
             width: double.infinity,
             height: double.infinity,
@@ -40,7 +39,6 @@ class _AuthViewState extends State<AuthView> {
               ),
             ),
           ),
-          // İçerik
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
@@ -50,7 +48,6 @@ class _AuthViewState extends State<AuthView> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     const SizedBox(height: 60),
-                    // Logo ve başlık
                     Text(
                       'GlobeConnect',
                       style: TextStyle(
@@ -94,12 +91,10 @@ class _AuthViewState extends State<AuthView> {
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 50),
-                    // Giriş formu
                     Form(
                       key: _formKey,
                       child: Column(
                         children: [
-                          // E-posta alanı
                           Container(
                             width: double.infinity,
                             decoration: BoxDecoration(
@@ -128,7 +123,9 @@ class _AuthViewState extends State<AuthView> {
                                   borderSide: BorderSide.none,
                                 ),
                                 contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 20, vertical: 16),
+                                  horizontal: 20,
+                                  vertical: 16,
+                                ),
                                 errorStyle: const TextStyle(
                                   color: Colors.redAccent,
                                   fontSize: 12,
@@ -146,7 +143,6 @@ class _AuthViewState extends State<AuthView> {
                             ),
                           ),
                           const SizedBox(height: 16),
-                          // Şifre alanı
                           Container(
                             width: double.infinity,
                             decoration: BoxDecoration(
@@ -176,7 +172,9 @@ class _AuthViewState extends State<AuthView> {
                                   borderSide: BorderSide.none,
                                 ),
                                 contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 20, vertical: 16),
+                                  horizontal: 20,
+                                  vertical: 16,
+                                ),
                                 errorStyle: const TextStyle(
                                   color: Colors.redAccent,
                                   fontSize: 12,
@@ -194,7 +192,6 @@ class _AuthViewState extends State<AuthView> {
                             ),
                           ),
                           const SizedBox(height: 12),
-                          // Şifremi unuttum linki
                           Align(
                             alignment: Alignment.centerRight,
                             child: TextButton(
@@ -220,7 +217,6 @@ class _AuthViewState extends State<AuthView> {
                             ),
                           ),
                           const SizedBox(height: 24),
-                          // Giriş yap butonu
                           Consumer<AuthViewModel>(
                             builder: (context, authVM, child) {
                               return Column(
@@ -261,129 +257,113 @@ class _AuthViewState extends State<AuthView> {
                                                             .text,
                                                       );
                                                 if (success && mounted) {
-                                                  // Navigate to home page
+                                                  Navigator
+                                                      .pushReplacementNamed(
+                                                          context, '/home');
                                                 }
                                               }
                                             },
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor:
-                                            Colors.white.withOpacity(0.1),
+                                        backgroundColor: Colors.blue,
                                         foregroundColor: Colors.white,
-                                        elevation: 0,
                                         shape: RoundedRectangleBorder(
                                           borderRadius:
                                               BorderRadius.circular(15),
-                                          side: BorderSide(
-                                            color:
-                                                Colors.white.withOpacity(0.1),
-                                            width: 1,
-                                          ),
+                                        ),
+                                        elevation: 0,
+                                      ),
+                                      child: Text(
+                                        _isLogin ? 'Giriş Yap' : 'Kayıt Ol',
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
                                         ),
                                       ),
-                                      child: authVM.isLoading
-                                          ? const SizedBox(
-                                              height: 20,
-                                              width: 20,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                                valueColor:
-                                                    AlwaysStoppedAnimation<
-                                                        Color>(Colors.white),
-                                              ),
-                                            )
-                                          : Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children: [
-                                                Image.asset(
-                                                  'assets/images/google_logo1.png',
-                                                  height: 20,
-                                                ),
-                                                const SizedBox(width: 12),
-                                                Text(
-                                                  'Google ile Giriş Yap',
-                                                  style: TextStyle(
-                                                    color: Colors.white,
-                                                    fontSize: 16,
-                                                    fontWeight: FontWeight.w500,
-                                                    letterSpacing: 0.3,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
                                     ),
                                   ),
-                                  const SizedBox(height: 16),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Expanded(
-                                        child: Container(
-                                          height: 1,
-                                          margin: const EdgeInsets.symmetric(
+                                  const SizedBox(height: 24),
+                                  Container(
+                                    width: double.infinity,
+                                    height: 50,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(15),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.1),
+                                          blurRadius: 10,
+                                          offset: const Offset(0, 5),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Material(
+                                      color: Colors.transparent,
+                                      child: InkWell(
+                                        borderRadius: BorderRadius.circular(15),
+                                        onTap: authVM.isLoading
+                                            ? null
+                                            : () async {
+                                                final success = await authVM
+                                                    .signInWithGoogle();
+                                                if (success && mounted) {
+                                                  Navigator
+                                                      .pushReplacementNamed(
+                                                          context, '/home');
+                                                }
+                                              },
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
                                               horizontal: 16),
-                                          decoration: BoxDecoration(
-                                            gradient: LinearGradient(
-                                              colors: [
-                                                Colors.white.withOpacity(0.01),
-                                                Colors.white.withOpacity(0.2),
-                                                Colors.white.withOpacity(0.2),
-                                                Colors.white.withOpacity(0.01),
-                                              ],
-                                              stops: const [0.0, 0.3, 0.7, 1.0],
-                                            ),
+                                          child: Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              Image.asset(
+                                                'assets/images/google_logo.png',
+                                                height: 24,
+                                              ),
+                                              const SizedBox(width: 12),
+                                              Text(
+                                                'Google ile Devam Et',
+                                                style: TextStyle(
+                                                  color: Colors.grey[800],
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                         ),
                                       ),
-                                      Text(
-                                        'veya',
-                                        style: TextStyle(
-                                          color: Colors.white.withOpacity(0.5),
-                                          fontSize: 14,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                      Expanded(
-                                        child: Container(
-                                          height: 1,
-                                          margin: const EdgeInsets.symmetric(
-                                              horizontal: 16),
-                                          decoration: BoxDecoration(
-                                            gradient: LinearGradient(
-                                              colors: [
-                                                Colors.white.withOpacity(0.01),
-                                                Colors.white.withOpacity(0.2),
-                                                Colors.white.withOpacity(0.2),
-                                                Colors.white.withOpacity(0.01),
-                                              ],
-                                              stops: const [0.0, 0.3, 0.7, 1.0],
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
+                                    ),
                                   ),
-                                  const SizedBox(height: 16),
-                                  // Kayıt ol linki
+                                  const SizedBox(height: 24),
                                   TextButton(
                                     onPressed: () {
                                       setState(() {
                                         _isLogin = !_isLogin;
                                       });
                                     },
-                                    style: TextButton.styleFrom(
-                                      foregroundColor: Colors.white70,
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 8, horizontal: 16),
-                                    ),
                                     child: Text(
-                                      'Kayıt Ol',
+                                      _isLogin
+                                          ? 'Hesabınız yok mu? Kayıt olun'
+                                          : 'Zaten hesabınız var mı? Giriş yapın',
                                       style: TextStyle(
                                         color: Colors.white.withOpacity(0.7),
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w500,
+                                        fontSize: 14,
                                       ),
-                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.pushNamed(context, '/register');
+                                    },
+                                    child: const Text(
+                                      'Kayıt Ol',
+                                      style: TextStyle(
+                                        color: Colors.blue,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ),
                                 ],
