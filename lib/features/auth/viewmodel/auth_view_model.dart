@@ -118,10 +118,8 @@ class AuthViewModel extends ChangeNotifier {
       _errorMessage = '';
       notifyListeners();
 
-      await Future.wait([
-        _auth.signOut(),
-        _googleSignIn.signOut(),
-      ]);
+      await _auth.signOut();
+      await _googleSignIn.signOut();
 
       _isLoading = false;
       notifyListeners();

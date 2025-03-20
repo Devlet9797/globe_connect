@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../auth/viewmodel/auth_view_model.dart';
+import '../../../features/auth/viewmodel/auth_view_model.dart';
 
 class HomeView extends StatelessWidget {
   const HomeView({super.key});
@@ -21,10 +21,14 @@ class HomeView extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.white),
             onPressed: () async {
-              final authVM = context.read<AuthViewModel>();
-              await authVM.signOut();
+              final viewModel = context.read<AuthViewModel>();
+              await viewModel.signOut();
               if (context.mounted) {
-                Navigator.pushReplacementNamed(context, '/auth');
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  '/',
+                  (route) => false,
+                );
               }
             },
           ),
