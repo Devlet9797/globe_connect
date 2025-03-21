@@ -23,9 +23,29 @@ class AuthViewModel extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
       return true;
+    } on FirebaseAuthException catch (e) {
+      _isLoading = false;
+      switch (e.code) {
+        case 'user-not-found':
+          _errorMessage = 'Bu e-posta adresi ile kayıtlı kullanıcı bulunamadı';
+          break;
+        case 'wrong-password':
+          _errorMessage = 'Hatalı şifre';
+          break;
+        case 'invalid-email':
+          _errorMessage = 'Geçersiz e-posta adresi';
+          break;
+        case 'user-disabled':
+          _errorMessage = 'Bu hesap devre dışı bırakılmış';
+          break;
+        default:
+          _errorMessage = 'Giriş yapılırken bir hata oluştu: ${e.message}';
+      }
+      notifyListeners();
+      return false;
     } catch (e) {
       _isLoading = false;
-      _errorMessage = 'Giriş yapılırken bir hata oluştu: ${e.toString()}';
+      _errorMessage = 'Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.';
       notifyListeners();
       return false;
     }

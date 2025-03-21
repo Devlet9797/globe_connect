@@ -15,6 +15,27 @@ class _AuthViewState extends State<AuthView> {
   final _passwordController = TextEditingController();
   bool _isLogin = true;
 
+  void _showErrorSnackBar() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text(
+          'E-posta veya şifre hatalı. Lütfen bilgilerinizi kontrol edip tekrar deneyin',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 14,
+          ),
+        ),
+        backgroundColor: Colors.red[400],
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -52,7 +73,7 @@ class _AuthViewState extends State<AuthView> {
                       'GlobeConnect',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 58,
+                        fontSize: 50,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 3.0,
                         height: 1.2,
@@ -337,7 +358,8 @@ class _AuthViewState extends State<AuthView> {
                             alignment: Alignment.centerRight,
                             child: TextButton(
                               onPressed: () {
-                                // TODO: Şifre sıfırlama sayfasına yönlendir
+                                Navigator.pushNamed(
+                                    context, '/forgot-password');
                               },
                               style: TextButton.styleFrom(
                                 foregroundColor: Colors.white70,
@@ -362,19 +384,6 @@ class _AuthViewState extends State<AuthView> {
                             builder: (context, authVM, child) {
                               return Column(
                                 children: [
-                                  if (authVM.errorMessage.isNotEmpty)
-                                    Padding(
-                                      padding:
-                                          const EdgeInsets.only(bottom: 16),
-                                      child: Text(
-                                        authVM.errorMessage,
-                                        style: const TextStyle(
-                                          color: Colors.redAccent,
-                                          fontSize: 13,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ),
                                   SizedBox(
                                     width: double.infinity,
                                     height: 50,
@@ -392,28 +401,61 @@ class _AuthViewState extends State<AuthView> {
                                         shadowColor:
                                             Colors.blue.withOpacity(0.3),
                                       ),
-                                      onPressed: () async {
-                                        if (_isLogin) {
-                                          await _handleSignIn(context);
-                                        } else {
-                                          await _handleSignUp(context);
-                                        }
-                                      },
-                                      child: Text(
-                                        'Giriş Yap',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                          letterSpacing: 0.5,
-                                        ),
-                                      ),
+                                      onPressed: context
+                                              .read<AuthViewModel>()
+                                              .isLoading
+                                          ? null
+                                          : () async {
+                                              if (_formKey.currentState!
+                                                  .validate()) {
+                                                final success = await context
+                                                    .read<AuthViewModel>()
+                                                    .signInWithEmail(
+                                                      _emailController.text
+                                                          .trim(),
+                                                      _passwordController.text,
+                                                    );
+                                                if (success && mounted) {
+                                                  Navigator
+                                                      .pushNamedAndRemoveUntil(
+                                                    context,
+                                                    '/home',
+                                                    (route) => false,
+                                                  );
+                                                } else if (mounted) {
+                                                  _showErrorSnackBar();
+                                                }
+                                              }
+                                            },
+                                      child: context
+                                              .watch<AuthViewModel>()
+                                              .isLoading
+                                          ? const SizedBox(
+                                              width: 24,
+                                              height: 24,
+                                              child: CircularProgressIndicator(
+                                                color: Colors.white,
+                                                strokeWidth: 2,
+                                              ),
+                                            )
+                                          : const Text(
+                                              'Giriş Yap',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w600,
+                                                letterSpacing: 0.5,
+                                              ),
+                                            ),
                                     ),
                                   ),
                                   const SizedBox(height: 24),
                                   TextButton(
                                     onPressed: () {
-                                      Navigator.pushNamed(context, '/register');
+                                      Navigator.pushNamed(
+                                        context,
+                                        '/register',
+                                      );
                                     },
                                     style: TextButton.styleFrom(
                                       padding: EdgeInsets.zero,
@@ -445,25 +487,5 @@ class _AuthViewState extends State<AuthView> {
         ],
       ),
     );
-  }
-
-  Future<void> _handleSignIn(BuildContext context) async {
-    if (_formKey.currentState!.validate()) {
-      final success = await Provider.of<AuthViewModel>(context, listen: false)
-          .signInWithEmail(_emailController.text, _passwordController.text);
-      if (success && mounted) {
-        Navigator.pushReplacementNamed(context, '/home');
-      }
-    }
-  }
-
-  Future<void> _handleSignUp(BuildContext context) async {
-    if (_formKey.currentState!.validate()) {
-      final success = await Provider.of<AuthViewModel>(context, listen: false)
-          .signUpWithEmail(_emailController.text, _passwordController.text);
-      if (success && mounted) {
-        Navigator.pushReplacementNamed(context, '/home');
-      }
-    }
   }
 }
