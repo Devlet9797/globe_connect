@@ -68,11 +68,11 @@ class _AuthViewState extends State<AuthView> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    const SizedBox(height: 40),
+                    const SizedBox(height: 5),
                     Image.asset(
                       'assets/images/logo1.png',
-                      height: 150,
-                      width: 150,
+                      height: 200,
+                      width: 200,
                       fit: BoxFit.contain,
                     ),
                     const SizedBox(height: 16),
@@ -101,7 +101,7 @@ class _AuthViewState extends State<AuthView> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Dünya Senin Ellerinde',
+                      'Dünya Senin Elinde',
                       style: TextStyle(
                         color: Colors.white.withOpacity(0.95),
                         fontSize: 18,
@@ -160,7 +160,7 @@ class _AuthViewState extends State<AuthView> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Image.asset(
-                                  'assets/images/google_logo1.png',
+                                  'assets/images/google_logo0.png',
                                   height: 24,
                                 ),
                                 const SizedBox(width: 12),

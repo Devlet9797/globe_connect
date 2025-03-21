@@ -57,15 +57,46 @@ class AuthViewModel extends ChangeNotifier {
       _errorMessage = '';
       notifyListeners();
 
-      await _auth.createUserWithEmailAndPassword(
-          email: email, password: password);
+      // Kullanıcıyı oluştur
+      final userCredential = await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
 
+      // Kullanıcı başarıyla oluşturuldu ve otomatik olarak giriş yapıldı
+      if (userCredential.user != null) {
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      } else {
+        throw FirebaseAuthException(
+          code: 'null-user',
+          message: 'Kullanıcı oluşturulamadı',
+        );
+      }
+    } on FirebaseAuthException catch (e) {
       _isLoading = false;
+      switch (e.code) {
+        case 'email-already-in-use':
+          _errorMessage = 'Bu e-posta adresi zaten kullanımda';
+          break;
+        case 'invalid-email':
+          _errorMessage = 'Geçersiz e-posta adresi';
+          break;
+        case 'operation-not-allowed':
+          _errorMessage = 'E-posta/şifre hesapları etkin değil';
+          break;
+        case 'weak-password':
+          _errorMessage = 'Şifre çok zayıf';
+          break;
+        default:
+          _errorMessage = 'Kayıt olurken bir hata oluştu: ${e.message}';
+      }
       notifyListeners();
-      return true;
+      return false;
     } catch (e) {
       _isLoading = false;
-      _errorMessage = 'Kayıt olurken bir hata oluştu: ${e.toString()}';
+      _errorMessage = 'Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.';
       notifyListeners();
       return false;
     }
