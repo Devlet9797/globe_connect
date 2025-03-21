@@ -379,7 +379,7 @@ class _AuthViewState extends State<AuthView> {
                                   color: Colors.white.withOpacity(0.7),
                                   fontSize: 14,
                                   fontWeight: FontWeight.w400,
-                                ),
+                                    ),
                               ),
                             ),
                           ),
@@ -414,11 +414,11 @@ class _AuthViewState extends State<AuthView> {
                                                   .validate()) {
                                                 final success = await context
                                                     .read<AuthViewModel>()
-                                                    .signInWithEmail(
+                                                        .signInWithEmail(
                                                       _emailController.text
                                                           .trim(),
                                                       _passwordController.text,
-                                                    );
+                                                      );
                                                 if (success && mounted) {
                                                   Navigator
                                                       .pushNamedAndRemoveUntil(
@@ -444,12 +444,12 @@ class _AuthViewState extends State<AuthView> {
                                             )
                                           : const Text(
                                               'Giriş Yap',
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 16,
+                                                  style: TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 16,
                                                 fontWeight: FontWeight.w600,
                                                 letterSpacing: 0.5,
-                                              ),
+                                                ),
                                             ),
                                     ),
                                   ),
