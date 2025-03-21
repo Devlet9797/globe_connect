@@ -73,7 +73,7 @@ class _AuthViewState extends State<AuthView> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Dünya Senin Elinde',
+                      'Dünya Senin Ellerinde',
                       style: TextStyle(
                         color: Colors.white.withOpacity(0.95),
                         fontSize: 18,
@@ -94,10 +94,10 @@ class _AuthViewState extends State<AuthView> {
                     Container(
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withOpacity(0.07),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withOpacity(0.1),
                           width: 1,
                         ),
                         boxShadow: [

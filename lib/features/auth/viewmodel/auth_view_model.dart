@@ -31,21 +31,14 @@ class AuthViewModel extends ChangeNotifier {
     }
   }
 
-  Future<bool> signUpWithEmail(String email, String password,
-      {String? nickname}) async {
+  Future<bool> signUpWithEmail(String email, String password) async {
     try {
       _isLoading = true;
       _errorMessage = '';
       notifyListeners();
 
-      // Kullanıcı oluştur
-      final userCredential = await _auth.createUserWithEmailAndPassword(
+      await _auth.createUserWithEmailAndPassword(
           email: email, password: password);
-
-      // Kullanıcı profili güncelle
-      if (nickname != null && nickname.isNotEmpty) {
-        await userCredential.user?.updateDisplayName(nickname);
-      }
 
       _isLoading = false;
       notifyListeners();

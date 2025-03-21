@@ -345,14 +345,9 @@ class _RegisterViewState extends State<RegisterView> {
                                         await viewModel.signUpWithEmail(
                                       _emailController.text,
                                       _passwordController.text,
-                                      nickname: _nicknameController.text,
                                     );
                                     if (success && mounted) {
-                                      Navigator.pushNamedAndRemoveUntil(
-                                        context,
-                                        '/home',
-                                        (route) => false,
-                                      );
+                                      Navigator.pop(context);
                                     }
                                   }
                                 }
