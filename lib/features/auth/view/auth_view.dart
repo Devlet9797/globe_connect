@@ -68,7 +68,14 @@ class _AuthViewState extends State<AuthView> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    const SizedBox(height: 60),
+                    const SizedBox(height: 40),
+                    Image.asset(
+                      'assets/images/logo1.png',
+                      height: 150,
+                      width: 150,
+                      fit: BoxFit.contain,
+                    ),
+                    const SizedBox(height: 16),
                     Text(
                       'GlobeConnect',
                       style: TextStyle(
@@ -354,7 +361,7 @@ class _AuthViewState extends State<AuthView> {
                             ),
                           ),
                           const SizedBox(height: 12),
-                          Align(
+                          Container(
                             alignment: Alignment.centerRight,
                             child: TextButton(
                               onPressed: () {
@@ -362,20 +369,17 @@ class _AuthViewState extends State<AuthView> {
                                     context, '/forgot-password');
                               },
                               style: TextButton.styleFrom(
-                                foregroundColor: Colors.white70,
                                 padding: EdgeInsets.zero,
                                 minimumSize: Size.zero,
                                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                               ),
                               child: Text(
                                 'Şifrenizi mi unuttunuz?',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodySmall
-                                    ?.copyWith(
-                                      color: Colors.white.withOpacity(0.5),
-                                      fontSize: 13,
-                                    ),
+                                style: TextStyle(
+                                  color: Colors.white.withOpacity(0.7),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w400,
+                                ),
                               ),
                             ),
                           ),
