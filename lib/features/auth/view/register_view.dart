@@ -11,7 +11,6 @@ class RegisterView extends StatefulWidget {
 
 class _RegisterViewState extends State<RegisterView> {
   final _formKey = GlobalKey<FormState>();
-  final _promoCodeController = TextEditingController();
   final _nicknameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -21,7 +20,7 @@ class _RegisterViewState extends State<RegisterView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: const Color(0xFF121212),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
@@ -43,44 +42,105 @@ class _RegisterViewState extends State<RegisterView> {
                             ?.copyWith(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
+                              fontSize: 42,
                             ),
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Dünya senin ellerinde',
+                        'Dünya Senin Elinde',
                         style:
                             Theme.of(context).textTheme.titleMedium?.copyWith(
                                   color: Colors.white70,
                                   letterSpacing: 1.5,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w300,
                                 ),
+                      ),
+                      const SizedBox(height: 20),
+                      // Google ile Giriş Yap Butonu
+                      Container(
+                        width: double.infinity,
+                        height: 50,
+                        margin: const EdgeInsets.symmetric(horizontal: 0),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[900],
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.white, width: 0.5),
+                        ),
+                        child: TextButton(
+                          onPressed: () async {
+                            final viewModel = context.read<AuthViewModel>();
+                            final success = await viewModel.signInWithGoogle();
+                            if (success && mounted) {
+                              Navigator.pushNamedAndRemoveUntil(
+                                context,
+                                '/home',
+                                (route) => false,
+                              );
+                            }
+                          },
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Image.asset(
+                                'assets/images/google_logo1.png',
+                                height: 24,
+                              ),
+                              const SizedBox(width: 10),
+                              Text(
+                                'Google ile Giriş Yap',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleMedium
+                                    ?.copyWith(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      // Veya çizgisi
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Container(
+                              height: 0.5,
+                              color: Colors.white24,
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Text(
+                              'veya',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.copyWith(
+                                    color: Colors.white54,
+                                  ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Container(
+                              height: 0.5,
+                              color: Colors.white24,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 40),
-                // Promokod (İsteğe bağlı)
-                Text(
-                  'Promokod (İsteğe bağlı)',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.white70,
-                      ),
-                ),
-                const SizedBox(height: 8),
-                TextFormField(
-                  controller: _promoCodeController,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    hintText: 'Davet kodunu girin',
-                    hintStyle: const TextStyle(color: Colors.grey),
-                    filled: true,
-                    fillColor: Colors.grey[900],
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
                 // Kullanıcı Adı
                 Text(
                   'Kullanıcı Adı*',
@@ -262,37 +322,51 @@ class _RegisterViewState extends State<RegisterView> {
                     const SizedBox(width: 10),
                     // Kayıt Ol Butonu
                     Expanded(
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
+                      child: Container(
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: Colors.blue,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.white, width: 0.5),
                         ),
-                        onPressed: _acceptTerms
-                            ? () async {
-                                if (_formKey.currentState!.validate()) {
-                                  final viewModel =
-                                      context.read<AuthViewModel>();
-                                  final success =
-                                      await viewModel.signUpWithEmail(
-                                    _emailController.text,
-                                    _passwordController.text,
-                                  );
-                                  if (success && mounted) {
-                                    Navigator.pop(context);
+                        child: TextButton(
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          onPressed: _acceptTerms
+                              ? () async {
+                                  if (_formKey.currentState!.validate()) {
+                                    final viewModel =
+                                        context.read<AuthViewModel>();
+                                    final success =
+                                        await viewModel.signUpWithEmail(
+                                      _emailController.text,
+                                      _passwordController.text,
+                                      nickname: _nicknameController.text,
+                                    );
+                                    if (success && mounted) {
+                                      Navigator.pushNamedAndRemoveUntil(
+                                        context,
+                                        '/home',
+                                        (route) => false,
+                                      );
+                                    }
                                   }
                                 }
-                              }
-                            : null,
-                        child: Text(
-                          'Devam Et',
-                          style:
-                              Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                              : null,
+                          child: Text(
+                            'Devam Et',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
                         ),
                       ),
                     ),
@@ -308,7 +382,6 @@ class _RegisterViewState extends State<RegisterView> {
 
   @override
   void dispose() {
-    _promoCodeController.dispose();
     _nicknameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();

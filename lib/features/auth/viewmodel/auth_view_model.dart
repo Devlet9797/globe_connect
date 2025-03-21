@@ -31,14 +31,21 @@ class AuthViewModel extends ChangeNotifier {
     }
   }
 
-  Future<bool> signUpWithEmail(String email, String password) async {
+  Future<bool> signUpWithEmail(String email, String password,
+      {String? nickname}) async {
     try {
       _isLoading = true;
       _errorMessage = '';
       notifyListeners();
 
-      await _auth.createUserWithEmailAndPassword(
+      // Kullanıcı oluştur
+      final userCredential = await _auth.createUserWithEmailAndPassword(
           email: email, password: password);
+
+      // Kullanıcı profili güncelle
+      if (nickname != null && nickname.isNotEmpty) {
+        await userCredential.user?.updateDisplayName(nickname);
+      }
 
       _isLoading = false;
       notifyListeners();
@@ -118,8 +125,10 @@ class AuthViewModel extends ChangeNotifier {
       _errorMessage = '';
       notifyListeners();
 
-      await _auth.signOut();
-      await _googleSignIn.signOut();
+      await Future.wait([
+        _auth.signOut(),
+        _googleSignIn.signOut(),
+      ]);
 
       _isLoading = false;
       notifyListeners();

@@ -52,45 +52,154 @@ class _AuthViewState extends State<AuthView> {
                       'GlobeConnect',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 48,
+                        fontSize: 58,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 3.0,
-                        height: 1.1,
+                        height: 1.2,
                         shadows: [
                           Shadow(
-                            color: Colors.blue.withOpacity(0.5),
-                            offset: const Offset(0, 4),
+                            color: Colors.blue.withOpacity(0.7),
+                            offset: const Offset(0, 5),
                             blurRadius: 15,
                           ),
                           Shadow(
                             color: Colors.white.withOpacity(0.5),
                             offset: const Offset(0, -2),
-                            blurRadius: 5,
+                            blurRadius: 6,
                           ),
                         ],
                       ),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     Text(
-                      'Dünya Senin Ellerinde',
+                      'Dünya Senin Elinde',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.9),
-                        fontSize: 20,
-                        fontWeight: FontWeight.w400,
-                        letterSpacing: 4.0,
+                        color: Colors.white.withOpacity(0.95),
+                        fontSize: 18,
+                        fontWeight: FontWeight.w300,
+                        letterSpacing: 3.0,
                         height: 1.2,
                         shadows: [
                           Shadow(
-                            color: Colors.blue.withOpacity(0.3),
+                            color: Colors.blue.withOpacity(0.4),
                             offset: const Offset(0, 2),
-                            blurRadius: 5,
+                            blurRadius: 4,
                           ),
                         ],
                       ),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 50),
+                    const SizedBox(height: 40),
+                    Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.2),
+                          width: 1,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: context.read<AuthViewModel>().isLoading
+                              ? null
+                              : () async {
+                                  final success = await context
+                                      .read<AuthViewModel>()
+                                      .signInWithGoogle();
+                                  if (success && mounted) {
+                                    Navigator.pushReplacementNamed(
+                                        context, '/home');
+                                  }
+                                },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 12,
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Image.asset(
+                                  'assets/images/google_logo1.png',
+                                  height: 24,
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  'Google ile Giriş Yap',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w400,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            height: 1,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.white.withOpacity(0.01),
+                                  Colors.white.withOpacity(0.2),
+                                  Colors.white.withOpacity(0.2),
+                                  Colors.white.withOpacity(0.01),
+                                ],
+                                stops: const [0.0, 0.3, 0.7, 1.0],
+                              ),
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: Text(
+                            'veya',
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.5),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Container(
+                            height: 1,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.white.withOpacity(0.01),
+                                  Colors.white.withOpacity(0.2),
+                                  Colors.white.withOpacity(0.2),
+                                  Colors.white.withOpacity(0.01),
+                                ],
+                                stops: const [0.0, 0.3, 0.7, 1.0],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
                     Form(
                       key: _formKey,
                       child: Column(
@@ -98,28 +207,38 @@ class _AuthViewState extends State<AuthView> {
                           Container(
                             width: double.infinity,
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.05),
-                              borderRadius: BorderRadius.circular(15),
+                              color: Colors.white.withOpacity(0.07),
+                              borderRadius: BorderRadius.circular(12),
                               border: Border.all(
                                 color: Colors.white.withOpacity(0.1),
                                 width: 1,
                               ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
                             ),
                             child: TextFormField(
                               controller: _emailController,
                               style: const TextStyle(
                                 color: Colors.white,
-                                fontSize: 16,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w400,
+                                letterSpacing: 0.5,
                               ),
-                              textAlign: TextAlign.center,
+                              textAlign: TextAlign.left,
                               decoration: InputDecoration(
                                 hintText: 'E-posta adresinizi girin',
                                 hintStyle: TextStyle(
-                                  color: Colors.white.withOpacity(0.3),
-                                  fontSize: 16,
+                                  color: Colors.white.withOpacity(0.35),
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w300,
                                 ),
                                 border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(15),
+                                  borderRadius: BorderRadius.circular(12),
                                   borderSide: BorderSide.none,
                                 ),
                                 contentPadding: const EdgeInsets.symmetric(
@@ -129,6 +248,12 @@ class _AuthViewState extends State<AuthView> {
                                 errorStyle: const TextStyle(
                                   color: Colors.redAccent,
                                   fontSize: 12,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                                prefixIcon: Icon(
+                                  Icons.email_outlined,
+                                  color: Colors.white.withOpacity(0.5),
+                                  size: 20,
                                 ),
                               ),
                               validator: (value) {
@@ -146,29 +271,39 @@ class _AuthViewState extends State<AuthView> {
                           Container(
                             width: double.infinity,
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.05),
-                              borderRadius: BorderRadius.circular(15),
+                              color: Colors.white.withOpacity(0.07),
+                              borderRadius: BorderRadius.circular(12),
                               border: Border.all(
                                 color: Colors.white.withOpacity(0.1),
                                 width: 1,
                               ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
                             ),
                             child: TextFormField(
                               controller: _passwordController,
                               style: const TextStyle(
                                 color: Colors.white,
-                                fontSize: 16,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w400,
+                                letterSpacing: 0.5,
                               ),
-                              textAlign: TextAlign.center,
+                              textAlign: TextAlign.left,
                               obscureText: true,
                               decoration: InputDecoration(
                                 hintText: 'Şifrenizi girin',
                                 hintStyle: TextStyle(
-                                  color: Colors.white.withOpacity(0.3),
-                                  fontSize: 16,
+                                  color: Colors.white.withOpacity(0.35),
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w300,
                                 ),
                                 border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(15),
+                                  borderRadius: BorderRadius.circular(12),
                                   borderSide: BorderSide.none,
                                 ),
                                 contentPadding: const EdgeInsets.symmetric(
@@ -178,6 +313,12 @@ class _AuthViewState extends State<AuthView> {
                                 errorStyle: const TextStyle(
                                   color: Colors.redAccent,
                                   fontSize: 12,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                                prefixIcon: Icon(
+                                  Icons.lock_outline,
+                                  color: Colors.white.withOpacity(0.5),
+                                  size: 20,
                                 ),
                               ),
                               validator: (value) {
@@ -238,131 +379,54 @@ class _AuthViewState extends State<AuthView> {
                                     width: double.infinity,
                                     height: 50,
                                     child: ElevatedButton(
-                                      onPressed: authVM.isLoading
-                                          ? null
-                                          : () async {
-                                              if (_formKey.currentState!
-                                                  .validate()) {
-                                                final success = _isLogin
-                                                    ? await authVM
-                                                        .signInWithEmail(
-                                                        _emailController.text,
-                                                        _passwordController
-                                                            .text,
-                                                      )
-                                                    : await authVM
-                                                        .signUpWithEmail(
-                                                        _emailController.text,
-                                                        _passwordController
-                                                            .text,
-                                                      );
-                                                if (success && mounted) {
-                                                  Navigator
-                                                      .pushReplacementNamed(
-                                                          context, '/home');
-                                                }
-                                              }
-                                            },
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.blue,
+                                        backgroundColor: Colors.blue.shade600,
                                         foregroundColor: Colors.white,
+                                        minimumSize:
+                                            const Size(double.infinity, 50),
                                         shape: RoundedRectangleBorder(
                                           borderRadius:
-                                              BorderRadius.circular(15),
+                                              BorderRadius.circular(12),
                                         ),
-                                        elevation: 0,
+                                        elevation: 2,
+                                        shadowColor:
+                                            Colors.blue.withOpacity(0.3),
                                       ),
+                                      onPressed: () async {
+                                        if (_isLogin) {
+                                          await _handleSignIn(context);
+                                        } else {
+                                          await _handleSignUp(context);
+                                        }
+                                      },
                                       child: Text(
-                                        _isLogin ? 'Giriş Yap' : 'Kayıt Ol',
-                                        style: const TextStyle(
+                                        'Giriş Yap',
+                                        style: TextStyle(
+                                          color: Colors.white,
                                           fontSize: 16,
                                           fontWeight: FontWeight.w600,
+                                          letterSpacing: 0.5,
                                         ),
                                       ),
                                     ),
                                   ),
                                   const SizedBox(height: 24),
-                                  Container(
-                                    width: double.infinity,
-                                    height: 50,
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(15),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(0.1),
-                                          blurRadius: 10,
-                                          offset: const Offset(0, 5),
-                                        ),
-                                      ],
-                                    ),
-                                    child: Material(
-                                      color: Colors.transparent,
-                                      child: InkWell(
-                                        borderRadius: BorderRadius.circular(15),
-                                        onTap: authVM.isLoading
-                                            ? null
-                                            : () async {
-                                                final success = await authVM
-                                                    .signInWithGoogle();
-                                                if (success && mounted) {
-                                                  Navigator
-                                                      .pushReplacementNamed(
-                                                          context, '/home');
-                                                }
-                                              },
-                                        child: Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 16),
-                                          child: Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: [
-                                              Image.asset(
-                                                'assets/images/google_logo.png',
-                                                height: 24,
-                                              ),
-                                              const SizedBox(width: 12),
-                                              Text(
-                                                'Google ile Devam Et',
-                                                style: TextStyle(
-                                                  color: Colors.grey[800],
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 24),
-                                  TextButton(
-                                    onPressed: () {
-                                      setState(() {
-                                        _isLogin = !_isLogin;
-                                      });
-                                    },
-                                    child: Text(
-                                      _isLogin
-                                          ? 'Hesabınız yok mu? Kayıt olun'
-                                          : 'Zaten hesabınız var mı? Giriş yapın',
-                                      style: TextStyle(
-                                        color: Colors.white.withOpacity(0.7),
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ),
                                   TextButton(
                                     onPressed: () {
                                       Navigator.pushNamed(context, '/register');
                                     },
+                                    style: TextButton.styleFrom(
+                                      padding: EdgeInsets.zero,
+                                      minimumSize: Size.zero,
+                                      tapTargetSize:
+                                          MaterialTapTargetSize.shrinkWrap,
+                                    ),
                                     child: const Text(
                                       'Kayıt Ol',
                                       style: TextStyle(
                                         color: Colors.blue,
-                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
                                       ),
                                     ),
                                   ),
@@ -381,5 +445,25 @@ class _AuthViewState extends State<AuthView> {
         ],
       ),
     );
+  }
+
+  Future<void> _handleSignIn(BuildContext context) async {
+    if (_formKey.currentState!.validate()) {
+      final success = await Provider.of<AuthViewModel>(context, listen: false)
+          .signInWithEmail(_emailController.text, _passwordController.text);
+      if (success && mounted) {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+    }
+  }
+
+  Future<void> _handleSignUp(BuildContext context) async {
+    if (_formKey.currentState!.validate()) {
+      final success = await Provider.of<AuthViewModel>(context, listen: false)
+          .signUpWithEmail(_emailController.text, _passwordController.text);
+      if (success && mounted) {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+    }
   }
 }
