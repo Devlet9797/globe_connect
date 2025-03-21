@@ -182,4 +182,39 @@ class AuthViewModel extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<bool> sendPasswordResetEmail(String email) async {
+    try {
+      _isLoading = true;
+      _errorMessage = '';
+      notifyListeners();
+
+      await _auth.sendPasswordResetEmail(email: email);
+
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } on FirebaseAuthException catch (e) {
+      _isLoading = false;
+      switch (e.code) {
+        case 'invalid-email':
+          _errorMessage = 'Geçersiz e-posta adresi';
+          break;
+        case 'user-not-found':
+          _errorMessage =
+              'Bu e-posta adresiyle kayıtlı bir kullanıcı bulunamadı';
+          break;
+        default:
+          _errorMessage =
+              'Şifre sıfırlama e-postası gönderilirken bir hata oluştu';
+      }
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = 'Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.';
+      notifyListeners();
+      return false;
+    }
+  }
 }
