@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../features/auth/viewmodel/auth_view_model.dart';
-import 'widgets/custom_navigation_bar.dart';
+import '../../profile/view/profile_view.dart';
+import 'widgets/publish_modal.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -13,197 +14,115 @@ class HomeView extends StatefulWidget {
 class _HomeViewState extends State<HomeView> {
   int _selectedIndex = 0;
 
+  void _showPublishModal() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const PublishModal(),
+    );
+  }
+
+  final List<Widget> _pages = [
+    const Center(
+        child: Text('Ana Sayfa', style: TextStyle(color: Colors.white))),
+    const Center(
+        child: Text('Servisler', style: TextStyle(color: Colors.white))),
+    const Center(child: Text('Yeni', style: TextStyle(color: Colors.white))),
+    const Center(child: Text('Sohbet', style: TextStyle(color: Colors.white))),
+    const ProfileView(),
+  ];
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF1A1B1E),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF1A1B1E),
-        title: Row(
-          children: [
-            CircleAvatar(
-              backgroundColor: Colors.blue,
-              child: Text(
-                'Re',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Text(
-              'Tüm Ülkeler',
-              style: TextStyle(
-                color: Colors.white,
+    return Theme(
+      data: Theme.of(context).copyWith(
+        navigationBarTheme: NavigationBarThemeData(
+          labelTextStyle: MaterialStateProperty.resolveWith((states) {
+            if (states.contains(MaterialState.selected)) {
+              return const TextStyle(
+                color: Colors.blue,
+                fontSize: 12,
                 fontWeight: FontWeight.w500,
+              );
+            }
+            return TextStyle(
+              color: Colors.white.withOpacity(0.7),
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            );
+          }),
+        ),
+      ),
+      child: Scaffold(
+        backgroundColor: const Color(0xFF121212),
+        body: _pages[_selectedIndex],
+        bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            border: Border(
+              top: BorderSide(
+                color: Colors.white.withOpacity(0.1),
+                width: 1,
               ),
             ),
-            Icon(
-              Icons.keyboard_arrow_down,
-              color: Colors.white,
-            ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search, color: Colors.white),
-            onPressed: () {},
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 10,
+                offset: const Offset(0, -5),
+              ),
+            ],
           ),
-          IconButton(
-            icon: const Icon(Icons.notifications_outlined, color: Colors.white),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout, color: Colors.white),
-            onPressed: () async {
-              final viewModel = context.read<AuthViewModel>();
-              await viewModel.signOut();
-              if (context.mounted) {
-                Navigator.pushNamedAndRemoveUntil(
-                  context,
-                  '/',
-                  (route) => false,
-                );
+          child: NavigationBar(
+            backgroundColor: const Color(0xFF121212),
+            selectedIndex: _selectedIndex,
+            onDestinationSelected: (index) {
+              if (index == 2) {
+                _showPublishModal();
+              } else {
+                setState(() {
+                  _selectedIndex = index;
+                });
               }
             },
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      _buildTabButton('Makaleler', 0),
-                      const SizedBox(width: 16),
-                      _buildTabButton('Mikroblog', 1),
-                      const SizedBox(width: 16),
-                      _buildTabButton('İş İlanları', 2),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  _buildArticleCard(
-                    'Topografik Kretinizm Nedir ve Nasıl Üstesinden Gelinir',
-                    'Bilgisayar oyunları bile yön bulma becerilerini geliştirmek için yardımcı olabilir',
-                    '5',
-                    '2',
-                    '22',
-                  ),
-                  const SizedBox(height: 16),
-                  _buildArticleCard(
-                    'ETIAS Sisteminin Avrupa Birliğinde Uygulanması 2026\'ya Ertelendi',
-                    'Avrupa Birliği, ETIAS sisteminin uygulanmasını tekrar erteledi...',
-                    '5',
-                    '0',
-                    '135',
-                  ),
-                ],
+            labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+            indicatorColor: Colors.blue.withOpacity(0.1),
+            surfaceTintColor: Colors.transparent,
+            shadowColor: Colors.transparent,
+            height: 65,
+            destinations: [
+              NavigationDestination(
+                icon: Icon(Icons.home_outlined,
+                    color: _selectedIndex == 0 ? Colors.blue : Colors.white70),
+                selectedIcon: Icon(Icons.home, color: Colors.blue),
+                label: 'Lenta',
               ),
-            ),
-          ],
-        ),
-      ),
-      bottomNavigationBar: CustomNavigationBar(
-        selectedIndex: _selectedIndex,
-        onDestinationSelected: (int index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
-      ),
-    );
-  }
-
-  Widget _buildTabButton(String text, int index) {
-    bool isSelected = _selectedIndex == index;
-    return InkWell(
-      onTap: () {
-        setState(() {
-          _selectedIndex = index;
-        });
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? Colors.blue : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          text,
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              NavigationDestination(
+                icon: Icon(Icons.grid_view_outlined,
+                    color: _selectedIndex == 1 ? Colors.blue : Colors.white70),
+                selectedIcon: Icon(Icons.grid_view, color: Colors.blue),
+                label: 'Servisler',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.add_circle_outline,
+                    color: _selectedIndex == 2 ? Colors.blue : Colors.white70),
+                selectedIcon: Icon(Icons.add_circle, color: Colors.blue),
+                label: 'Yayınla',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.chat_outlined,
+                    color: _selectedIndex == 3 ? Colors.blue : Colors.white70),
+                selectedIcon: Icon(Icons.chat, color: Colors.blue),
+                label: 'Sohbet',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.person_outline,
+                    color: _selectedIndex == 4 ? Colors.blue : Colors.white70),
+                selectedIcon: Icon(Icons.person, color: Colors.blue),
+                label: 'Profil',
+              ),
+            ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildArticleCard(
-    String title,
-    String subtitle,
-    String likes,
-    String comments,
-    String views,
-  ) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFF242529),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.7),
-                    fontSize: 14,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Icon(Icons.favorite_border, color: Colors.white, size: 20),
-                const SizedBox(width: 4),
-                Text(likes, style: TextStyle(color: Colors.white)),
-                const SizedBox(width: 16),
-                Icon(Icons.chat_bubble_outline, color: Colors.white, size: 20),
-                const SizedBox(width: 4),
-                Text(comments, style: TextStyle(color: Colors.white)),
-                const Spacer(),
-                Icon(Icons.remove_red_eye_outlined,
-                    color: Colors.white, size: 20),
-                const SizedBox(width: 4),
-                Text(views, style: TextStyle(color: Colors.white)),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }
