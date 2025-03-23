@@ -5,10 +5,17 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'core/init/navigation/navigation_route.dart';
 import 'features/auth/viewmodel/auth_view_model.dart';
 import 'features/auth/service/auth_service.dart';
+import 'firebase_options.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  timeago.setLocaleMessages('tr', timeago.TrMessages());
+
   runApp(const MyApp());
 }
 

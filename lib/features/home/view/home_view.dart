@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../features/auth/viewmodel/auth_view_model.dart';
 import '../../profile/view/profile_view.dart';
 import 'widgets/publish_modal.dart';
+import 'widgets/feed_view.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -23,8 +24,7 @@ class _HomeViewState extends State<HomeView> {
   }
 
   final List<Widget> _pages = [
-    const Center(
-        child: Text('Ana Sayfa', style: TextStyle(color: Colors.white))),
+    const FeedView(),
     const Center(
         child: Text('Servisler', style: TextStyle(color: Colors.white))),
     const Center(child: Text('Yeni', style: TextStyle(color: Colors.white))),
@@ -94,7 +94,7 @@ class _HomeViewState extends State<HomeView> {
                 icon: Icon(Icons.home_outlined,
                     color: _selectedIndex == 0 ? Colors.blue : Colors.white70),
                 selectedIcon: Icon(Icons.home, color: Colors.blue),
-                label: 'Lenta',
+                label: 'Akış',
               ),
               NavigationDestination(
                 icon: Icon(Icons.grid_view_outlined,

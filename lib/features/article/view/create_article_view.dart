@@ -2,10 +2,22 @@ import 'package:flutter/material.dart';
 import 'widgets/country_selector.dart';
 import '../model/country.dart';
 import '../model/category.dart';
+import '../model/article_draft.dart';
 import 'widgets/category_selector.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'article_content_view.dart';
+import '../service/article_draft_service.dart';
+import 'drafts_view.dart';
+import 'dart:convert';
 
 class CreateArticleView extends StatefulWidget {
-  const CreateArticleView({super.key});
+  final ArticleDraft? draft;
+
+  const CreateArticleView({
+    super.key,
+    this.draft,
+  });
 
   @override
   State<CreateArticleView> createState() => _CreateArticleViewState();
@@ -21,11 +33,16 @@ class _CreateArticleViewState extends State<CreateArticleView> {
   List<Country> _selectedCountries = [];
   List<String> selectedCategories = [];
   List<Category> _categories = [];
+  File? _selectedImage;
+  final _picker = ImagePicker();
+  final _draftService = ArticleDraftService();
+  bool _isSaving = false;
 
   @override
   void initState() {
     super.initState();
     _initializeCategories();
+    _loadDraftData();
     _titleController.addListener(() {
       setState(() {
         _titleLength = _titleController.text.length;
@@ -41,6 +58,28 @@ class _CreateArticleViewState extends State<CreateArticleView> {
         _contentLength = _contentController.text.length;
       });
     });
+  }
+
+  void _loadDraftData() {
+    if (widget.draft != null) {
+      _titleController.text = widget.draft!.title ?? '';
+      _descriptionController.text = widget.draft!.description ?? '';
+      _contentController.text = widget.draft!.content ?? '';
+      selectedCategories = List.from(widget.draft!.categories);
+      _selectedCountries = widget.draft!.countries
+          .map((name) => Country(
+              name: name, flag: '')) // Flag bilgisini uygun şekilde doldurun
+          .toList();
+
+      if (widget.draft!.coverImageBase64 != null) {
+        // Base64'ten geçici bir dosya oluştur
+        final bytes = base64Decode(widget.draft!.coverImageBase64!);
+        final tempDir = Directory.systemTemp;
+        final tempFile = File('${tempDir.path}/temp_image.jpg');
+        tempFile.writeAsBytesSync(bytes);
+        _selectedImage = tempFile;
+      }
+    }
   }
 
   void _initializeCategories() {
@@ -222,6 +261,99 @@ class _CreateArticleViewState extends State<CreateArticleView> {
         },
       ),
     );
+  }
+
+  Future<void> _pickImage() async {
+    try {
+      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+      if (image != null) {
+        setState(() {
+          _selectedImage = File(image.path);
+        });
+      }
+    } catch (e) {
+      // Hata durumunda kullanıcıya bilgi ver
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Fotoğraf seçilirken bir hata oluştu'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _saveDraft() async {
+    if (_isSaving) return;
+
+    // Minimum içerik kontrolü
+    if (_titleController.text.isEmpty &&
+        _descriptionController.text.isEmpty &&
+        _contentController.text.isEmpty &&
+        _selectedImage == null &&
+        selectedCategories.isEmpty &&
+        _selectedCountries.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Lütfen en az bir alan doldurun'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isSaving = true;
+    });
+
+    try {
+      print('Taslak kaydetme başlatılıyor...');
+      final draftId = await _draftService.saveDraft(
+        id: widget.draft?.id, // Eğer düzenleme ise ID'yi gönder
+        title: _titleController.text,
+        description: _descriptionController.text,
+        content: _contentController.text,
+        coverImage: _selectedImage,
+        categories: selectedCategories,
+        countries: _selectedCountries.map((c) => c.name).toList(),
+      );
+      print('Taslak kaydedildi. ID: $draftId');
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Taslak kaydedildi'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        // Taslaklar sayfasına yönlendir
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DraftsView(),
+          ),
+        );
+      }
+    } catch (e) {
+      print('Taslak kaydetme hatası: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Taslak kaydedilirken bir hata oluştu: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+        });
+      }
+    }
   }
 
   @override
@@ -487,67 +619,96 @@ class _CreateArticleViewState extends State<CreateArticleView> {
             Row(
               children: [
                 Expanded(
-                  child: Container(
-                    height: 120,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF1E1E1E),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.image_outlined,
-                            color: Colors.white.withOpacity(0.7),
-                            size: 32,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Kapak',
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.7),
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
+                  child: GestureDetector(
+                    onTap: _pickImage,
+                    child: Container(
+                      height: 120,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1E1E1E),
+                        borderRadius: BorderRadius.circular(12),
+                        image: _selectedImage != null
+                            ? DecorationImage(
+                                image: FileImage(_selectedImage!),
+                                fit: BoxFit.cover,
+                              )
+                            : null,
                       ),
+                      child: _selectedImage == null
+                          ? Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.image_outlined,
+                                    color: Colors.white.withOpacity(0.7),
+                                    size: 32,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Kapak',
+                                    style: TextStyle(
+                                      color: Colors.white.withOpacity(0.7),
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : null,
                     ),
                   ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: Container(
-                    height: 120,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF1E1E1E),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.edit_outlined,
-                            color: Colors.white.withOpacity(0.7),
-                            size: 32,
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ArticleContentView(
+                            initialContent: _contentController.text,
+                            onContentChanged: (content) {
+                              setState(() {
+                                _contentController.text = content;
+                                _contentLength = content.length;
+                              });
+                            },
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Makale İçeriği',
-                            style: TextStyle(
+                        ),
+                      );
+                    },
+                    child: Container(
+                      height: 120,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1E1E1E),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.edit_outlined,
                               color: Colors.white.withOpacity(0.7),
-                              fontSize: 14,
+                              size: 32,
                             ),
-                          ),
-                          Text(
-                            '0 / 20.000',
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.5),
-                              fontSize: 12,
+                            const SizedBox(height: 8),
+                            Text(
+                              'Makale İçeriği',
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.7),
+                                fontSize: 14,
+                              ),
                             ),
-                          ),
-                        ],
+                            Text(
+                              '$_contentLength / 20.000',
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.5),
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -569,23 +730,100 @@ class _CreateArticleViewState extends State<CreateArticleView> {
         ),
         child: Row(
           children: [
-            Container(
-              width: 50,
-              height: 50,
-              decoration: BoxDecoration(
-                color: const Color(0xFF1E1E1E),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                Icons.save_outlined,
-                color: Colors.white.withOpacity(0.7),
+            GestureDetector(
+              onTap: _isSaving ? null : _saveDraft,
+              child: Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1E1E1E),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: _isSaving
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : Icon(
+                        Icons.description_outlined,
+                        color: Colors.white.withOpacity(0.7),
+                      ),
               ),
             ),
             const SizedBox(width: 16),
             Expanded(
               child: ElevatedButton(
-                onPressed: () {
-                  // TODO: Makaleyi yayınla
+                onPressed: () async {
+                  if (_isSaving) return;
+
+                  // Minimum içerik kontrolü
+                  if (_titleController.text.isEmpty &&
+                      _descriptionController.text.isEmpty &&
+                      _contentController.text.isEmpty &&
+                      _selectedImage == null &&
+                      selectedCategories.isEmpty &&
+                      _selectedCountries.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Lütfen en az bir alan doldurun'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                    return;
+                  }
+
+                  setState(() {
+                    _isSaving = true;
+                  });
+
+                  try {
+                    // Önce taslak olarak kaydet
+                    final draftId = await _draftService.saveDraft(
+                      id: widget.draft?.id,
+                      title: _titleController.text,
+                      description: _descriptionController.text,
+                      content: _contentController.text,
+                      coverImage: _selectedImage,
+                      categories: selectedCategories,
+                      countries: _selectedCountries.map((c) => c.name).toList(),
+                    );
+
+                    // Sonra yayınla
+                    await _draftService.publishDraft(draftId);
+
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Makale yayınlandı'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+
+                      // Ana sayfaya dön
+                      Navigator.of(context).popUntil((route) => route.isFirst);
+                    }
+                  } catch (e) {
+                    print('Makale yayınlanırken hata: $e');
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content:
+                              Text('Makale yayınlanırken bir hata oluştu: $e'),
+                          backgroundColor: Colors.red,
+                          duration: const Duration(seconds: 5),
+                        ),
+                      );
+                    }
+                  } finally {
+                    if (mounted) {
+                      setState(() {
+                        _isSaving = false;
+                      });
+                    }
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
@@ -595,13 +833,22 @@ class _CreateArticleViewState extends State<CreateArticleView> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text(
-                  'Yayınla',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+                child: _isSaving
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Text(
+                        'Yayınla',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
               ),
             ),
           ],
