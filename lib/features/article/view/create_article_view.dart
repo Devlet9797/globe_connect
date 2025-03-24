@@ -13,10 +13,12 @@ import 'dart:convert';
 
 class CreateArticleView extends StatefulWidget {
   final ArticleDraft? draft;
+  final ArticleDraft? editingArticle;
 
   const CreateArticleView({
     super.key,
     this.draft,
+    this.editingArticle,
   });
 
   @override
@@ -42,7 +44,7 @@ class _CreateArticleViewState extends State<CreateArticleView> {
   void initState() {
     super.initState();
     _initializeCategories();
-    _loadDraftData();
+    _loadData();
     _titleController.addListener(() {
       setState(() {
         _titleLength = _titleController.text.length;
@@ -60,24 +62,56 @@ class _CreateArticleViewState extends State<CreateArticleView> {
     });
   }
 
-  void _loadDraftData() {
-    if (widget.draft != null) {
-      _titleController.text = widget.draft!.title ?? '';
-      _descriptionController.text = widget.draft!.description ?? '';
-      _contentController.text = widget.draft!.content ?? '';
-      selectedCategories = List.from(widget.draft!.categories);
-      _selectedCountries = widget.draft!.countries
-          .map((name) => Country(
-              name: name, flag: '')) // Flag bilgisini uygun şekilde doldurun
-          .toList();
+  Future<void> _loadData() async {
+    // Önce tüm alanları temizle
+    setState(() {
+      _titleController.text = '';
+      _descriptionController.text = '';
+      _contentController.text = '';
+      selectedCategories = [];
+      _selectedCountries = [];
+      _selectedImage = null;
+    });
 
-      if (widget.draft!.coverImageBase64 != null) {
-        // Base64'ten geçici bir dosya oluştur
-        final bytes = base64Decode(widget.draft!.coverImageBase64!);
-        final tempDir = Directory.systemTemp;
-        final tempFile = File('${tempDir.path}/temp_image.jpg');
-        tempFile.writeAsBytesSync(bytes);
-        _selectedImage = tempFile;
+    // Düzenleme veya taslak verilerini yükle
+    final articleToLoad = widget.editingArticle ?? widget.draft;
+    if (articleToLoad != null) {
+      setState(() {
+        _titleController.text = articleToLoad.title ?? '';
+        _descriptionController.text = articleToLoad.description ?? '';
+        _contentController.text = articleToLoad.content ?? '';
+        selectedCategories = List.from(articleToLoad.categories);
+        _selectedCountries = articleToLoad.countries
+            .map((name) => Country(name: name, flag: ''))
+            .toList();
+      });
+
+      // Fotoğrafı yükle
+      if (articleToLoad.coverImageBase64 != null &&
+          articleToLoad.coverImageBase64!.isNotEmpty) {
+        try {
+          final bytes = base64Decode(articleToLoad.coverImageBase64!);
+          final tempDir = Directory.systemTemp;
+          final tempFile = File(
+              '${tempDir.path}/temp_image_${DateTime.now().millisecondsSinceEpoch}.jpg');
+          await tempFile.writeAsBytes(bytes);
+
+          if (mounted) {
+            setState(() {
+              _selectedImage = tempFile;
+            });
+          }
+        } catch (e) {
+          print('Fotoğraf yüklenirken hata: $e');
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Fotoğraf yüklenirken bir hata oluştu: $e'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
       }
     }
   }
@@ -310,7 +344,7 @@ class _CreateArticleViewState extends State<CreateArticleView> {
     try {
       print('Taslak kaydetme başlatılıyor...');
       final draftId = await _draftService.saveDraft(
-        id: widget.draft?.id, // Eğer düzenleme ise ID'yi gönder
+        id: widget.editingArticle?.id, // Eğer düzenleme ise ID'yi gönder
         title: _titleController.text,
         description: _descriptionController.text,
         content: _contentController.text,
@@ -376,9 +410,9 @@ class _CreateArticleViewState extends State<CreateArticleView> {
           onPressed: () => Navigator.pop(context),
         ),
         centerTitle: true,
-        title: const Text(
-          'Makale Oluştur',
-          style: TextStyle(color: Colors.white),
+        title: Text(
+          widget.editingArticle != null ? 'Makaleyi Düzenle' : 'Makale Oluştur',
+          style: const TextStyle(color: Colors.white),
         ),
       ),
       body: SingleChildScrollView(
@@ -730,30 +764,32 @@ class _CreateArticleViewState extends State<CreateArticleView> {
         ),
         child: Row(
           children: [
-            GestureDetector(
-              onTap: _isSaving ? null : _saveDraft,
-              child: Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1E1E1E),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: _isSaving
-                    ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
+            // Düzenleme modunda taslak düğmesini gösterme
+            if (widget.editingArticle == null)
+              GestureDetector(
+                onTap: _isSaving ? null : _saveDraft,
+                child: Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1E1E1E),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: _isSaving
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : Icon(
+                          Icons.description_outlined,
+                          color: Colors.white.withOpacity(0.7),
                         ),
-                      )
-                    : Icon(
-                        Icons.description_outlined,
-                        color: Colors.white.withOpacity(0.7),
-                      ),
+                ),
               ),
-            ),
-            const SizedBox(width: 16),
+            if (widget.editingArticle == null) const SizedBox(width: 16),
             Expanded(
               child: ElevatedButton(
                 onPressed: () async {
@@ -780,40 +816,61 @@ class _CreateArticleViewState extends State<CreateArticleView> {
                   });
 
                   try {
-                    // Önce taslak olarak kaydet
-                    final draftId = await _draftService.saveDraft(
-                      id: widget.draft?.id,
+                    String? imageBase64;
+                    if (_selectedImage != null) {
+                      final bytes = await _selectedImage!.readAsBytes();
+                      imageBase64 = base64Encode(bytes);
+                    }
+
+                    final article = ArticleDraft(
+                      id: widget.editingArticle?.id ?? widget.draft?.id,
                       title: _titleController.text,
                       description: _descriptionController.text,
                       content: _contentController.text,
-                      coverImage: _selectedImage,
+                      coverImageBase64: imageBase64,
                       categories: selectedCategories,
                       countries: _selectedCountries.map((c) => c.name).toList(),
+                      createdAt:
+                          widget.editingArticle?.createdAt ?? DateTime.now(),
+                      userId: widget.editingArticle?.userId ??
+                          _draftService.getCurrentUserId()!,
+                      likesCount: widget.editingArticle?.likesCount ?? 0,
+                      likedByUsers: widget.editingArticle?.likedByUsers ?? [],
                     );
 
-                    // Sonra yayınla
-                    await _draftService.publishDraft(draftId);
-
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Makale yayınlandı'),
-                          backgroundColor: Colors.green,
-                        ),
-                      );
-
-                      // Ana sayfaya dön
-                      Navigator.of(context).popUntil((route) => route.isFirst);
+                    if (widget.editingArticle != null) {
+                      // Makaleyi güncelle
+                      await _draftService.updateArticle(article);
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Makale başarıyla güncellendi'),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                        Navigator.pop(context);
+                      }
+                    } else {
+                      // Yeni makale yayınla
+                      await _draftService.publishDraft(article);
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Makale başarıyla yayınlandı'),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                        Navigator.pop(context);
+                      }
                     }
                   } catch (e) {
-                    print('Makale yayınlanırken hata: $e');
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content:
-                              Text('Makale yayınlanırken bir hata oluştu: $e'),
+                          content: Text(widget.editingArticle != null
+                              ? 'Makale güncellenirken bir hata oluştu: $e'
+                              : 'Makale yayınlanırken bir hata oluştu: $e'),
                           backgroundColor: Colors.red,
-                          duration: const Duration(seconds: 5),
                         ),
                       );
                     }
@@ -842,9 +899,9 @@ class _CreateArticleViewState extends State<CreateArticleView> {
                           strokeWidth: 2,
                         ),
                       )
-                    : const Text(
-                        'Yayınla',
-                        style: TextStyle(
+                    : Text(
+                        widget.editingArticle != null ? 'Güncelle' : 'Yayınla',
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
                         ),

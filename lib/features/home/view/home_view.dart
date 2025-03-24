@@ -4,6 +4,7 @@ import '../../../features/auth/viewmodel/auth_view_model.dart';
 import '../../profile/view/profile_view.dart';
 import 'widgets/publish_modal.dart';
 import 'widgets/feed_view.dart';
+import 'widgets/job_listing_view.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -25,8 +26,7 @@ class _HomeViewState extends State<HomeView> {
 
   final List<Widget> _pages = [
     const FeedView(),
-    const Center(
-        child: Text('Servisler', style: TextStyle(color: Colors.white))),
+    const JobListingView(),
     const Center(child: Text('Yeni', style: TextStyle(color: Colors.white))),
     const Center(child: Text('Sohbet', style: TextStyle(color: Colors.white))),
     const ProfileView(),
@@ -100,7 +100,7 @@ class _HomeViewState extends State<HomeView> {
                 icon: Icon(Icons.grid_view_outlined,
                     color: _selectedIndex == 1 ? Colors.blue : Colors.white70),
                 selectedIcon: Icon(Icons.grid_view, color: Colors.blue),
-                label: 'Servisler',
+                label: 'İş İlanı',
               ),
               NavigationDestination(
                 icon: Icon(Icons.add_circle_outline,

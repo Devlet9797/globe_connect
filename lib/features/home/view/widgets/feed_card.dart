@@ -1,15 +1,25 @@
 import 'package:flutter/material.dart';
 import '../../../article/model/article_draft.dart';
 import '../../../article/view/widgets/country_flag.dart';
+import '../../../article/service/article_draft_service.dart';
+import '../../../article/view/article_detail_view.dart';
 import 'dart:convert';
 
-class FeedCard extends StatelessWidget {
+class FeedCard extends StatefulWidget {
   final ArticleDraft draft;
 
   const FeedCard({
     super.key,
     required this.draft,
   });
+
+  @override
+  State<FeedCard> createState() => _FeedCardState();
+}
+
+class _FeedCardState extends State<FeedCard> {
+  final _draftService = ArticleDraftService();
+  bool _isLiking = false;
 
   String _formatTimeAgo(DateTime date) {
     final now = DateTime.now();
@@ -28,116 +38,163 @@ class FeedCard extends StatelessWidget {
     }
   }
 
+  Future<void> _handleLike() async {
+    if (_isLiking || widget.draft.id == null) return;
+
+    setState(() {
+      _isLiking = true;
+    });
+
+    try {
+      await _draftService.toggleLike(widget.draft.id!);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Beğeni işlemi başarısız: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLiking = false;
+        });
+      }
+    }
+  }
+
+  void _navigateToDetail() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ArticleDetailView(article: widget.draft),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
+    final isLiked = _draftService.isLikedByUser(widget.draft);
+
+    return GestureDetector(
+      onTap: _navigateToDetail,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1E1E1E),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2C2C2C),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.article_outlined,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Makale',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                        ),
+                      ),
+                      Text(
+                        _formatTimeAgo(widget.draft.createdAt),
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.5),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Spacer(),
+                  if (widget.draft.countries.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: CountryFlag(
+                        countryName: widget.draft.countries.first,
+                        size: 20,
+                      ),
+                    ),
+                  PopupMenuButton<String>(
+                    icon: Icon(
+                      Icons.more_horiz,
+                      color: Colors.white.withOpacity(0.7),
+                      size: 20,
+                    ),
                     color: const Color(0xFF2C2C2C),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.article_outlined,
-                    color: Colors.white,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Makale',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                      ),
-                    ),
-                    Text(
-                      _formatTimeAgo(draft.createdAt),
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.5),
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ),
-                const Spacer(),
-                if (draft.countries.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: CountryFlag(
-                      countryName: draft.countries.first,
-                      size: 24,
-                    ),
-                  ),
-                PopupMenuButton<String>(
-                  icon: Icon(
-                    Icons.more_horiz,
-                    color: Colors.white.withOpacity(0.7),
-                  ),
-                  color: const Color(0xFF2C2C2C),
-                  itemBuilder: (context) => [
-                    PopupMenuItem(
-                      value: 'share',
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.share_outlined,
-                            color: Colors.white.withOpacity(0.7),
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Paylaş',
-                            style: TextStyle(
+                    itemBuilder: (context) => [
+                      PopupMenuItem(
+                        value: 'share',
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.share_outlined,
                               color: Colors.white.withOpacity(0.7),
+                              size: 18,
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 8),
+                            Text(
+                              'Paylaş',
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.7),
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
+                    ],
+                    onSelected: (value) {
+                      // TODO: Paylaşım işlemi
+                    },
+                  ),
+                ],
+              ),
+            ),
+            if (widget.draft.coverImageBase64 != null &&
+                widget.draft.coverImageBase64!.isNotEmpty)
+              Container(
+                width: double.infinity,
+                height: 180,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
                     ),
                   ],
-                  onSelected: (value) {
-                    // TODO: Paylaşım işlemi
-                  },
                 ),
-              ],
-            ),
-          ),
-          if (draft.coverImageBase64 != null &&
-              draft.coverImageBase64!.isNotEmpty)
-            Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(0),
-                    topRight: Radius.circular(0),
-                    bottomLeft: Radius.circular(12),
-                    bottomRight: Radius.circular(12),
-                  ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
                   child: Image.memory(
-                    base64Decode(draft.coverImageBase64!),
-                    height: 200,
-                    width: double.infinity,
+                    base64Decode(widget.draft.coverImageBase64!),
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
                       print('Resim yükleme hatası: $error');
                       return Container(
-                        height: 200,
+                        height: 180,
                         color: const Color(0xFF2C2C2C),
                         child: Center(
                           child: Icon(
@@ -150,75 +207,66 @@ class FeedCard extends StatelessWidget {
                     },
                   ),
                 ),
-                if (draft.categories.isNotEmpty)
-                  Positioned(
-                    top: 12,
-                    left: 12,
-                    child: Row(
-                      children: draft.categories.map((category) {
-                        String shortName = category;
-                        if (category.contains(' ')) {
-                          shortName = category
-                              .split(' ')
-                              .map((word) => word[0])
-                              .join('');
-                        } else if (category.length > 3) {
-                          shortName = category.substring(0, 3).toUpperCase();
-                        } else {
-                          shortName = category.toUpperCase();
-                        }
-
-                        return Container(
-                          margin: const EdgeInsets.only(right: 8),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.6),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            shortName,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        );
-                      }).toList(),
+              ),
+            if (widget.draft.title != null && widget.draft.title!.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+                child: Text(
+                  widget.draft.title!,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            if (widget.draft.description != null &&
+                widget.draft.description!.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+                child: Text(
+                  widget.draft.description!,
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.7),
+                    fontSize: 13,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: _handleLike,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      child: Icon(
+                        isLiked ? Icons.favorite : Icons.favorite_border,
+                        color: isLiked
+                            ? Colors.red
+                            : Colors.white.withOpacity(0.7),
+                        size: 20,
+                      ),
                     ),
                   ),
-              ],
-            ),
-          if (draft.title != null && draft.title!.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                draft.title!,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w500,
-                ),
+                  const SizedBox(width: 4),
+                  if (widget.draft.likesCount > 0)
+                    Text(
+                      widget.draft.likesCount.toString(),
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.7),
+                        fontSize: 13,
+                      ),
+                    ),
+                ],
               ),
             ),
-          if (draft.description != null && draft.description!.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16)
-                  .copyWith(bottom: 16),
-              child: Text(
-                draft.description!,
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.7),
-                  fontSize: 14,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
